@@ -1,15 +1,16 @@
+import { MongoService } from "@/lib/GridFSService";
 import { connectToMongo } from "@/lib/connectToMongo";
 import { NextResponse } from "next/server";
 import { Readable } from "stream";
+
 export async function POST(req: Request, response: Response) {
-  const { bucket, client } = await connectToMongo();
+  const { bucket } = await connectToMongo();
   const data = await req.formData();
   for (const entry of Array.from(data.entries())) {
     const [filename, value] = entry;
 
-    const count = (await bucket.find({ filename }).toArray()).length;
-
-    const existing = count > 0;
+    // If file already exists, let's throw a 400 error.
+    const existing = await MongoService.fileExists(filename);
 
     if (existing) {
       return NextResponse.json(
@@ -18,10 +19,12 @@ export async function POST(req: Request, response: Response) {
       );
     }
 
-    const blob = value as unknown as Blob;
-    const isBlob = "arrayBuffer" in blob;
+    // FormDataEntryValue can either be type `Blob` or `string`
+    // if its type is object then it's a Blob
+    const isFile = typeof value == "object";
 
-    if (!existing && isBlob) {
+    if (isFile) {
+      const blob = value as Blob;
       const buffer = Buffer.from(await blob.arrayBuffer());
       const stream = Readable.from(buffer);
       const uploadStream = bucket.openUploadStream(filename);
@@ -29,5 +32,6 @@ export async function POST(req: Request, response: Response) {
     }
   }
 
+  // return the response after all the entries have been processed.
   return NextResponse.json({ success: true });
 }
