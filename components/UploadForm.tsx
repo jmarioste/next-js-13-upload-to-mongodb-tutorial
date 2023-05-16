@@ -16,7 +16,7 @@ const UploadForm = () => {
   };
   return (
     <form onSubmit={handleSubmit}>
-      <input type="file" name="files" ref={ref} />
+      <input type="file" name="files" ref={ref} multiple />
       <button
         type="submit"
         className="px-2 py-1 rounded-md bg-violet-50 text-violet-500"
