@@ -1,9 +1,9 @@
-import UploadForm from "@/components/UploadForm";
+import ImageUploader from "@/components/ImageUploader";
 
 export default function Home() {
   return (
     <main className="p-10">
-      <UploadForm />
+      <ImageUploader />
     </main>
   );
 }
